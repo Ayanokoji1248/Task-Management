@@ -6,6 +6,7 @@ dotenv.config()
 import cookieParser = require("cookie-parser");
 import authRouter from "./routes/auth.route";
 import { dbConnection } from "./config/dbConnection.config";
+import taskRouter from "./routes/task.route";
 
 
 app.use(cookieParser());
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRouter);
+app.use('/api/task', taskRouter)
 
 async function main() {
     try {

@@ -19,10 +19,12 @@ dotenv_1.default.config();
 const cookieParser = require("cookie-parser");
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 const dbConnection_config_1 = require("./config/dbConnection.config");
+const task_route_1 = __importDefault(require("./routes/task.route"));
 app.use(cookieParser());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use('/api/auth', auth_route_1.default);
+app.use('/api/task', task_route_1.default);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
