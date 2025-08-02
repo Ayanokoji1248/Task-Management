@@ -20,6 +20,11 @@ const cookieParser = require("cookie-parser");
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 const dbConnection_config_1 = require("./config/dbConnection.config");
 const task_route_1 = __importDefault(require("./routes/task.route"));
+const cors_1 = __importDefault(require("cors"));
+app.use((0, cors_1.default)({
+    origin: "http://localhost:5173",
+    credentials: true,
+}));
 app.use(cookieParser());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));

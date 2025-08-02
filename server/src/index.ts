@@ -7,8 +7,12 @@ import cookieParser = require("cookie-parser");
 import authRouter from "./routes/auth.route";
 import { dbConnection } from "./config/dbConnection.config";
 import taskRouter from "./routes/task.route";
+import cors from "cors";
 
-
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+}))
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
