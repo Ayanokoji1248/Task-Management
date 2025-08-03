@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react"
 import { BACKEND_URL } from "../utils";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
+    const navigate = useNavigate();
 
     const [authState, setAuthState] = useState("login");
 
@@ -21,6 +23,7 @@ const AuthPage = () => {
             setEmail("")
             setPassword("")
             console.log(response.data)
+            navigate('/home')
         } catch (error) {
             console.error(error);
         } finally {
