@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createTask = void 0;
+exports.getAllUserTask = exports.createTask = void 0;
 const zod_1 = __importDefault(require("zod"));
 const user_model_1 = require("../models/user.model");
 const task_model_1 = require("../models/task.model");
@@ -24,7 +24,7 @@ const taskValidation = zod_1.default.object({
 });
 const createTask = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userId = req.user._id;
+        const userId = req.user.id;
         const { title, description, status, priority } = req.body;
         const validate = taskValidation.safeParse({
             title, description, status, priority
@@ -64,3 +64,22 @@ const createTask = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.createTask = createTask;
+const getAllUserTask = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.user.id;
+        const tasks = yield task_model_1.taskModel.find({ user: userId });
+        res.status(200).json({
+            message: "User Tasks",
+            tasks
+        });
+        return;
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal Server Error"
+        });
+        return;
+    }
+});
+exports.getAllUserTask = getAllUserTask;

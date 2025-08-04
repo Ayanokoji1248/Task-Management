@@ -68,7 +68,7 @@ const userRegister = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             return;
         }
         const _a = user.toObject(), { password: _ } = _a, sanitizeUser = __rest(_a, ["password"]);
-        const token = jsonwebtoken_1.default.sign({ _id: user._id, username: user.username }, process.env.JWT_SECRET);
+        const token = jsonwebtoken_1.default.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET);
         res.cookie("token", token, {
             httpOnly: true,
             sameSite: "strict",
@@ -114,7 +114,7 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
             return;
         }
         const _a = userExist.toObject(), { password: _ } = _a, sanitizeUser = __rest(_a, ["password"]);
-        const token = jsonwebtoken_1.default.sign({ _id: userExist._id, username: userExist.username }, process.env.JWT_SECRET);
+        const token = jsonwebtoken_1.default.sign({ id: userExist._id, username: userExist.username }, process.env.JWT_SECRET);
         res.cookie("token", token, {
             httpOnly: true,
             sameSite: "strict",

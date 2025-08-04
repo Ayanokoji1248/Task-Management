@@ -4,9 +4,13 @@ import { BiSearch } from "react-icons/bi";
 import { useState } from "react";
 import TaskFormModal from "../components/TaskFormModal";
 import TaskCard from "../components/TaskCard";
+import useTaskStore from "../store/taskStore";
 
 
 const HomePage = () => {
+
+    const { tasks } = useTaskStore()
+
     const [showModal, setShowModal] = useState(false)
 
     return (
@@ -87,9 +91,12 @@ const HomePage = () => {
 
                     </div>
                     <div className="md:w-[70%] w-full  h-full p-5 flex flex-wrap gap-5">
-                        <TaskCard />
-                        <TaskCard />
-                        <TaskCard />
+                        {tasks.map((_, index) => (
+                            <TaskCard
+                                key={index}
+                            />
+                        ))}
+
                     </div>
                 </div>
             </div>

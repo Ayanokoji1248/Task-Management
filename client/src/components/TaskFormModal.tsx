@@ -2,6 +2,7 @@ import { RxCross2 } from "react-icons/rx";
 import { BACKEND_URL } from "../utils";
 import axios from "axios";
 import { useState } from "react";
+import useTaskStore from "../store/taskStore";
 
 interface TaskFormModalProp {
     setShowModal: (show: boolean) => void
@@ -14,6 +15,8 @@ const TaskFormModal = ({ setShowModal }: TaskFormModalProp) => {
     const [status, setStatus] = useState("");
     const [priority, setPriority] = useState("");
 
+    const { addTask } = useTaskStore()
+
     const handleSubmit = async () => {
         try {
             const response = await axios.post(`${BACKEND_URL}/task/create`, {
@@ -24,6 +27,7 @@ const TaskFormModal = ({ setShowModal }: TaskFormModalProp) => {
             }, { withCredentials: true });
 
             console.log(response.data)
+            addTask(response.data.task)
 
             setShowModal(false);
         } catch (error) {

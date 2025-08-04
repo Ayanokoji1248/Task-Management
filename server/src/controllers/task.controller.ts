@@ -12,7 +12,7 @@ const taskValidation = z.object({
 
 export const createTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user.id;
         const { title, description, status, priority } = req.body
 
         const validate = taskValidation.safeParse({
@@ -52,6 +52,27 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
 
     } catch (error) {
         console.error(error);
+        res.status(500).json({
+            message: "Internal Server Error"
+        })
+        return
+    }
+}
+
+export const getAllUserTask = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user.id;
+
+        const tasks = await taskModel.find({ user: userId });
+
+        res.status(200).json({
+            message: "User Tasks",
+            tasks
+        })
+        return
+
+    } catch (error) {
+        console.error(error)
         res.status(500).json({
             message: "Internal Server Error"
         })

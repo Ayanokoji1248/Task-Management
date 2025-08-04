@@ -57,7 +57,7 @@ export const userRegister = async (req: Request, res: Response, next: NextFuncti
 
         const { password: _, ...sanitizeUser } = user.toObject()
 
-        const token = jwt.sign({ _id: user._id, username: user.username }, process.env.JWT_SECRET as string);
+        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET as string);
 
         res.cookie("token", token, {
             httpOnly: true,
@@ -113,7 +113,7 @@ export const userLogin = async (req: Request, res: Response, next: NextFunction)
 
         const { password: _, ...sanitizeUser } = userExist.toObject();
 
-        const token = jwt.sign({ _id: userExist._id, username: userExist.username }, process.env.JWT_SECRET as string);
+        const token = jwt.sign({ id: userExist._id, username: userExist.username }, process.env.JWT_SECRET as string);
 
         res.cookie("token", token, {
             httpOnly: true,
