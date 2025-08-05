@@ -2,7 +2,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom"
 import AuthPage from "./pages/AuthPage"
 import HomePage from "./pages/HomePage"
 import { useEffect } from "react"
-import useTaskStore from "./store/taskStore"
 import axios from "axios"
 import { BACKEND_URL } from "./utils"
 import ProtectedRoute from "./components/ProtectedRoute"
@@ -10,17 +9,7 @@ import useUserStore from "./store/userStore"
 
 const App = () => {
 
-  const { setTask } = useTaskStore();
   const { setUser, setLoading } = useUserStore();
-
-  const getAllTask = async () => {
-    try {
-      const response = await axios.get(`${BACKEND_URL}/task/all`, { withCredentials: true });
-      setTask(response.data.tasks)
-    } catch (error) {
-      console.error(error)
-    }
-  }
 
   const getUser = async () => {
     setLoading(true)
@@ -36,16 +25,25 @@ const App = () => {
 
   useEffect(() => {
     async function fetchAll() {
-      await getUser()
-      await getAllTask()
+      setLoading(true)
+      try {
+        await getUser();
+      } catch (error) {
+        console.error(error)
+      }
+      finally {
+        setLoading(false)
+      }
     }
 
     fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<AuthPage />} />
+
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<HomePage />} />
         </Route>

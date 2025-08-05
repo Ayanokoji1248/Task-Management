@@ -3,7 +3,9 @@ export default interface taskProp {
     description: string,
     status: "In Progress" | "Completed" | "To Do",
     priority: "Low" | "Medium" | "High",
-    user: {
+    createdAt: string,
+    updatedAt: string,
+    user?: {
         _id: string,
         username: string
     }

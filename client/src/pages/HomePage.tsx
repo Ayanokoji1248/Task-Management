@@ -1,23 +1,37 @@
 import { FaPlus } from "react-icons/fa6";
 import NavBar from "../components/NavBar"
 import { BiSearch } from "react-icons/bi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TaskFormModal from "../components/TaskFormModal";
 import TaskCard from "../components/TaskCard";
 import useTaskStore from "../store/taskStore";
+import { BACKEND_URL } from "../utils";
+import axios from "axios";
 
 
 const HomePage = () => {
 
-    const { tasks } = useTaskStore()
+    const { tasks, setTask } = useTaskStore()
 
     const [showModal, setShowModal] = useState(false)
+
+    const getAllTask = async () => {
+        try {
+            const response = await axios.get(`${BACKEND_URL}/task/all`, { withCredentials: true });
+            setTask(response.data.tasks.reverse())
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    useEffect(() => {
+        getAllTask()
+    }, [])
 
     return (
         <div className="w-full min-h-screen bg-[#0A0A0A]">
             {
                 showModal &&
-                <div className="w-full h-full bg-zinc-900/80 absolute flex justify-center items-center">
+                <div className="w-full h-full bg-zinc-900/80 fixed flex justify-center items-center">
                     <TaskFormModal setShowModal={setShowModal} />
                 </div>
             }
@@ -91,9 +105,15 @@ const HomePage = () => {
 
                     </div>
                     <div className="md:w-[70%] w-full  h-full p-5 flex flex-wrap gap-5">
-                        {tasks.map((_, index) => (
+                        {tasks.map((task, index) => (
                             <TaskCard
                                 key={index}
+                                title={task.title}
+                                description={task.description}
+                                priority={task.priority}
+                                status={task.status}
+                                createdAt={task.createdAt}
+                                updatedAt={task.updatedAt}
                             />
                         ))}
 

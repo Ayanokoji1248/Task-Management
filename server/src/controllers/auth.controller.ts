@@ -62,7 +62,6 @@ export const userRegister = async (req: Request, res: Response, next: NextFuncti
         res.cookie("token", token, {
             httpOnly: true,
             sameSite: "strict",
-            secure: true
         })
 
         res.status(201).json({
@@ -118,7 +117,6 @@ export const userLogin = async (req: Request, res: Response, next: NextFunction)
         res.cookie("token", token, {
             httpOnly: true,
             sameSite: "strict",
-            secure: true
         })
 
         res.status(200).json({
@@ -130,6 +128,35 @@ export const userLogin = async (req: Request, res: Response, next: NextFunction)
         console.log(error);
         res.status(500).json({
             message: "Internal Server Error",
+        })
+    }
+}
+
+
+export const userLogout = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const token = req.cookies.token
+        console.log(req.cookies)
+        if (!token) {
+            res.status(404).json({
+                message: "Token Required"
+            })
+            return
+        }
+
+        res.clearCookie("token", {
+            httpOnly: true,
+            sameSite: "strict"
+        })
+        res.status(200).json({
+            message: "User Logout"
+        })
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal Server Error"
         })
     }
 }

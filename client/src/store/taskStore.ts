@@ -12,7 +12,7 @@ const useTaskStore = create<TaskStoreType>((set) => ({
     setTask: (tasks) => set({ tasks }),
     addTask: (task) =>
         set((state) => ({
-            tasks: [...state.tasks, task],
+            tasks: [task, ...state.tasks],
         })),
 }));
 

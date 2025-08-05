@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../store/userStore";
 
+
 const AuthPage = () => {
     const navigate = useNavigate();
 
@@ -25,7 +26,7 @@ const AuthPage = () => {
             setUsername("")
             setEmail("")
             setPassword("")
-            // console.log(response.data)
+            console.log(response.data)
             setUser(response.data.user)
             navigate('/home')
         } catch (error) {

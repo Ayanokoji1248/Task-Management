@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userLogin = exports.userRegister = void 0;
+exports.userLogout = exports.userLogin = exports.userRegister = void 0;
 const zod_1 = require("zod");
 const user_model_1 = require("../models/user.model");
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -72,7 +72,6 @@ const userRegister = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         res.cookie("token", token, {
             httpOnly: true,
             sameSite: "strict",
-            secure: true
         });
         res.status(201).json({
             message: "User Created",
@@ -118,7 +117,6 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         res.cookie("token", token, {
             httpOnly: true,
             sameSite: "strict",
-            secure: true
         });
         res.status(200).json({
             message: "Login Successful",
@@ -133,3 +131,29 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.userLogin = userLogin;
+const userLogout = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const token = req.cookies.token;
+        console.log(req.cookies);
+        if (!token) {
+            res.status(404).json({
+                message: "Token Required"
+            });
+            return;
+        }
+        res.clearCookie("token", {
+            httpOnly: true,
+            sameSite: "strict"
+        });
+        res.status(200).json({
+            message: "User Logout"
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+exports.userLogout = userLogout;

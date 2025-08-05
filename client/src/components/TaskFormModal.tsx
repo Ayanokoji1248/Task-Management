@@ -17,7 +17,8 @@ const TaskFormModal = ({ setShowModal }: TaskFormModalProp) => {
 
     const { addTask } = useTaskStore()
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
         try {
             const response = await axios.post(`${BACKEND_URL}/task/create`, {
                 title,
