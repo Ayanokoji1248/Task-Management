@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express"
 import z from "zod";
 import { userModel } from "../models/user.model";
 import { taskModel } from "../models/task.model";
+import mongoose from "mongoose";
 
 const taskValidation = z.object({
     title: z.string().trim(),
@@ -73,6 +74,102 @@ export const getAllUserTask = async (req: Request, res: Response, next: NextFunc
 
     } catch (error) {
         console.error(error)
+        res.status(500).json({
+            message: "Internal Server Error"
+        })
+        return
+    }
+}
+
+export const updateTask = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const taskId = req.params.id;
+        const userId = req.user.id;
+
+        const { title, description, status, priority } = req.body
+
+        if (!taskId || !mongoose.Types.ObjectId.isValid(taskId)) {
+            res.status(404).json({
+                message: "Invalid Task Id"
+            })
+            return
+        }
+
+        const task = await taskModel.findById(taskId);
+
+        if (!task) {
+            res.status(404).json({
+                message: "Task Not Found"
+            })
+            return
+        }
+
+        if (task.user?.toString() !== userId.toString()) {
+            res.status(400).json({
+                message: "Forbidden"
+            })
+            return
+        }
+
+        const updatedTask = await taskModel.findByIdAndUpdate(taskId, {
+            title,
+            description,
+            status,
+            priority
+        }, { new: true });
+
+        res.status(200).json({
+            message: "Task Updated",
+            task: updatedTask
+        })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Internal Server Error"
+        })
+        return
+    }
+}
+
+
+export const deleteTask = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const taskId = req.params.id;
+        const userId = req.user.id;
+
+        if (!taskId || !mongoose.Types.ObjectId.isValid(taskId)) {
+            res.status(400).json({
+                message: "Invalid Task Id",
+            })
+            return
+        }
+
+        const task = await taskModel.findById(taskId);
+
+        if (!task) {
+            res.status(404).json({
+                message: "Task Not Found"
+            })
+            return
+        }
+
+        if (task.user?.toString() !== userId.toString()) {
+            res.status(401).json({
+                message: "Unauthorized"
+            })
+            return
+        }
+
+        await taskModel.findByIdAndDelete(taskId);
+
+        res.status(200).json({
+            message: "Task Deleted"
+        })
+
+
+    } catch (error) {
+        console.log(error)
         res.status(500).json({
             message: "Internal Server Error"
         })

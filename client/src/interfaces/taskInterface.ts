@@ -1,4 +1,5 @@
 export default interface taskProp {
+    _id:string,
     title: string,
     description: string,
     status: "In Progress" | "Completed" | "To Do",

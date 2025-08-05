@@ -6,4 +6,6 @@ const task_controller_1 = require("../controllers/task.controller");
 const taskRouter = (0, express_1.Router)();
 taskRouter.post("/create", user_middleware_1.userMiddlware, task_controller_1.createTask);
 taskRouter.get('/all', user_middleware_1.userMiddlware, task_controller_1.getAllUserTask);
+taskRouter.put('/:id', user_middleware_1.userMiddlware, task_controller_1.updateTask);
+taskRouter.delete('/:id', user_middleware_1.userMiddlware, task_controller_1.deleteTask);
 exports.default = taskRouter;

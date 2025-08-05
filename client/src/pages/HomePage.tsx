@@ -11,9 +11,10 @@ import axios from "axios";
 
 const HomePage = () => {
 
-    const { tasks, setTask } = useTaskStore()
+    const { tasks, setTask, tasksCount } = useTaskStore()
 
     const [showModal, setShowModal] = useState(false)
+    const { todo, inProgress, completed } = tasksCount();
 
     const getAllTask = async () => {
         try {
@@ -89,15 +90,15 @@ const HomePage = () => {
 
                         <div className="flex gap-2 justify-evenly flex-wrap">
                             <div className="flex-1 h-28 bg-[#101010] border-[1px] border-zinc-700 rounded-md flex flex-col justify-center items-center ">
-                                <h1 className="text-3xl font-bold text-blue-600">1</h1>
+                                <h1 className="text-3xl font-bold text-blue-600">{todo}</h1>
                                 <p className="text-zinc-400">To Do</p>
                             </div>
                             <div className="flex-1 h-28 bg-[#101010] border-[1px] border-zinc-700 rounded-md flex flex-col justify-center items-center ">
-                                <h1 className="text-3xl font-bold text-orange-600">1</h1>
+                                <h1 className="text-3xl font-bold text-orange-600">{inProgress}</h1>
                                 <p className="text-zinc-400">In Progress</p>
                             </div>
                             <div className="flex-1 h-28 bg-[#101010] border-[1px] border-zinc-700 rounded-md flex flex-col justify-center items-center ">
-                                <h1 className="text-3xl font-bold text-green-600">1</h1>
+                                <h1 className="text-3xl font-bold text-green-600">{completed}</h1>
                                 <p className="text-zinc-400">Completed</p>
                             </div>
 
@@ -105,9 +106,16 @@ const HomePage = () => {
 
                     </div>
                     <div className="md:w-[70%] w-full  h-full p-5 flex flex-wrap gap-5">
-                        {tasks.map((task, index) => (
+
+                        {tasks.length == 0 &&
+                            <div className="w-full flex justify-center items-center">
+                                <p className="font-medium text-zinc-500">No Tasks Added yet.</p>
+                            </div>
+                        }
+                        {tasks.map((task) => (
                             <TaskCard
-                                key={index}
+                                key={task._id}
+                                _id={task._id}
                                 title={task.title}
                                 description={task.description}
                                 priority={task.priority}

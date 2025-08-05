@@ -50,8 +50,8 @@ const TaskFormModal = ({ setShowModal }: TaskFormModalProp) => {
                     <input value={title} onChange={(e) => setTitle(e.target.value)} type="title" name="title" id="title" className="bg-[#121212] border-[1px] border-zinc-800 text-white text-sm rounded-lg block w-full p-2.5 dark:placeholder-gray-400 focus-within:ring-[1px] focus-within:ring-zinc-700 outline-none" placeholder="Enter task title" required />
                 </div>
                 <div>
-                    <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your password</label>
-                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} name="title" id="title" className="bg-[#121212] border-[1px] border-zinc-800 text-white text-sm rounded-lg block w-full p-2.5 dark:placeholder-gray-400 focus-within:ring-[1px] focus-within:ring-zinc-700 outline-none resize-none" placeholder="Enter task description" required></textarea>
+                    <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
+                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} name="description" id="description" className="bg-[#121212] border-[1px] border-zinc-800 text-white text-sm rounded-lg block w-full p-2.5 dark:placeholder-gray-400 focus-within:ring-[1px] focus-within:ring-zinc-700 outline-none resize-none" placeholder="Enter task description" required></textarea>
                 </div>
                 <div className="flex items-center justify-between">
                     <div>
