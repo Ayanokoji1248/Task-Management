@@ -8,7 +8,7 @@ type TaskStoreType = {
     updateTask: (task: taskProp) => void;
     deleteTask: (taskId: string) => void;
 
-    tasksCount: () => void
+    tasksCount: () => { todo: number, inProgress: number, completed: number }
 };
 
 const useTaskStore = create<TaskStoreType>((set, get) => ({
