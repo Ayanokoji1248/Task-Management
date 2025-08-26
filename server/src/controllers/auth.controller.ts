@@ -4,6 +4,7 @@ import { z } from "zod"
 import { userModel } from "../models/user.model";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { logEvent } from "../utils/helper";
 
 const userRegisterSchema = z.object({
     username: z.string().trim().min(5, "At least 5 character long"),
@@ -28,6 +29,8 @@ export const userRegister = async (req: Request, res: Response, next: NextFuncti
             res.status(400).json({
                 "errors": flattenError.fieldErrors,
             })
+
+            await logEvent(req, null, "registeration_failed", 3, "Validation Error")
             return
         }
 
@@ -37,6 +40,8 @@ export const userRegister = async (req: Request, res: Response, next: NextFuncti
             res.status(400).json({
                 message: "Email Already Exists"
             })
+
+            await logEvent(req, null, "registeration_failed", 3, "Email Already Exists")
             return
         }
 
@@ -52,6 +57,7 @@ export const userRegister = async (req: Request, res: Response, next: NextFuncti
             res.status(400).json({
                 message: "Error Creating User"
             })
+            logEvent(req, null, "registeration_failed", 4, "Error creating user in DB")
             return
         }
 
@@ -68,6 +74,7 @@ export const userRegister = async (req: Request, res: Response, next: NextFuncti
             message: "User Created",
             user: sanitizeUser,
         })
+        await logEvent(req, user._id.toString(), "registeration_success", 1, "User register successfull")
         return
 
     } catch (error) {
@@ -75,6 +82,7 @@ export const userRegister = async (req: Request, res: Response, next: NextFuncti
         res.status(500).json({
             message: "Internal Server Error"
         })
+        await logEvent(req, null, "registeration_failed", 5, "Internal Server Error during registeration")
     }
 }
 
