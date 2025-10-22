@@ -17,11 +17,14 @@ const AuthPage = () => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const [error, setError] = useState("");
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
         setLoading(true)
         try {
             const payload = authState === "register" ? { username, email, password } : { email, password }
+            console.log(BACKEND_URL)
             const response = await axios.post(`${BACKEND_URL}/auth/${authState}`, payload, { withCredentials: true });
             setUsername("")
             setEmail("")
@@ -31,6 +34,7 @@ const AuthPage = () => {
             navigate('/home')
         } catch (error) {
             console.error(error);
+            setError("Invalid Credentials")
         } finally {
             setLoading(false);
         }
@@ -62,12 +66,20 @@ const AuthPage = () => {
                             }
                             <div>
                                 <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
-                                <input onChange={(e) => setEmail(e.target.value)} type="email" name="email" id="email" className="bg-gray-50 font-medium border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-zinc-900 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter your email" required />
+                                <input onChange={(e) => {
+                                    setEmail(e.target.value)
+                                    setError("")
+                                }} type="email" name="email" id="email" className="bg-gray-50 font-medium border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-zinc-900 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter your email" required />
                             </div>
                             <div>
                                 <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
-                                <input onChange={(e) => setPassword(e.target.value)} type="password" name="password" id="password" className="bg-gray-50 font-medium border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-zinc-900 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter your password" required />
+                                <input onChange={(e) => {
+                                    setPassword(e.target.value)
+                                    setError("")
+                                }} type="password" name="password" id="password" className="bg-gray-50 font-medium border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-zinc-900 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter your password" required />
                             </div>
+
+                            <p className="text-sm text-red-500 font-medium">{error}</p>
 
                             <button disabled={loading} type="submit" className="w-full text-zinc-950 bg-white cursor-pointer hover:bg-neutral-200 md:transition-all duration-300  focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
                                 {loading ? "Loading..." : authState === "register" ? "Create Account" : "Login"}

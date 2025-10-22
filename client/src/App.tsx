@@ -6,6 +6,8 @@ import axios from "axios"
 import { BACKEND_URL } from "./utils"
 import ProtectedRoute from "./components/ProtectedRoute"
 import useUserStore from "./store/userStore"
+import Dashboard from "./pages/Dashboard"
+import AdminAuthPage from "./pages/AdminAuthPage"
 
 const App = () => {
 
@@ -43,9 +45,11 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<AuthPage />} />
+        <Route path="/admin" element={<AdminAuthPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<HomePage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 
       </Routes>
