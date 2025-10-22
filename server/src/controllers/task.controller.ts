@@ -1,178 +1,107 @@
-import { Request, Response, NextFunction } from "express"
+import { Request, Response, NextFunction } from "express";
 import z from "zod";
 import { userModel } from "../models/user.model";
 import { taskModel } from "../models/task.model";
 import mongoose from "mongoose";
+import { logEvent } from "../utils/helper";
 
 const taskValidation = z.object({
     title: z.string().trim(),
     description: z.string().trim(),
     status: z.enum(["In Progress", "Completed", "To Do"]),
     priority: z.enum(["Low", "Medium", "High"]),
-})
+});
 
 export const createTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user.id;
-        const { title, description, status, priority } = req.body
+        const { title, description, status, priority } = req.body;
 
-        const validate = taskValidation.safeParse({
-            title, description, status, priority
-        });
-
+        const validate = taskValidation.safeParse({ title, description, status, priority });
         if (!validate.success) {
             const flattenError = validate.error.flatten((issue) => issue.message);
-            res.status(400).json({
-                error: flattenError.fieldErrors,
-            })
-            return
+            return res.status(400).json({ error: flattenError.fieldErrors });
         }
 
         const user = await userModel.findById(userId);
+        if (!user) return res.status(404).json({ message: "User Not Found" });
 
-        if (!user) {
-            res.status(404).json({
-                message: "User Not Found"
-            })
-            return
-        }
+        const task = await taskModel.create({ title, description, status, priority, user: userId });
 
-        const task = await taskModel.create({
-            title,
-            description,
-            status,
-            priority,
-            user: userId
-        })
+        // Log the creation event
+        await logEvent(req, userId, "create_task", 1, `Task created with ID: ${task._id}`);
 
-        res.status(201).json({
-            message: "Task Created",
-            task
-        })
-
-
+        res.status(201).json({ message: "Task Created", task });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        })
-        return
+        res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};
 
 export const getAllUserTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = req.user.id;
-
         const tasks = await taskModel.find({ user: userId });
 
-        res.status(200).json({
-            message: "User Tasks",
-            tasks
-        })
-        return
+        // Optional: log that user viewed tasks
+        await logEvent(req, userId, "view_tasks", 1, `Fetched all tasks for user`);
 
+        res.status(200).json({ message: "User Tasks", tasks });
     } catch (error) {
-        console.error(error)
-        res.status(500).json({
-            message: "Internal Server Error"
-        })
-        return
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};
 
 export const updateTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const taskId = req.params.id;
         const userId = req.user.id;
+        const { title, description, status, priority } = req.body;
 
-        const { title, description, status, priority } = req.body
-
-        if (!taskId || !mongoose.Types.ObjectId.isValid(taskId)) {
-            res.status(404).json({
-                message: "Invalid Task Id"
-            })
-            return
-        }
+        if (!taskId || !mongoose.Types.ObjectId.isValid(taskId))
+            return res.status(404).json({ message: "Invalid Task Id" });
 
         const task = await taskModel.findById(taskId);
+        if (!task) return res.status(404).json({ message: "Task Not Found" });
+        if (task.user?.toString() !== userId.toString()) return res.status(403).json({ message: "Forbidden" });
 
-        if (!task) {
-            res.status(404).json({
-                message: "Task Not Found"
-            })
-            return
-        }
+        const updatedTask = await taskModel.findByIdAndUpdate(
+            taskId,
+            { title, description, status, priority },
+            { new: true }
+        );
 
-        if (task.user?.toString() !== userId.toString()) {
-            res.status(400).json({
-                message: "Forbidden"
-            })
-            return
-        }
+        // Log the update event
+        await logEvent(req, userId, "update_task", 2, `Task updated with ID: ${task._id}`);
 
-        const updatedTask = await taskModel.findByIdAndUpdate(taskId, {
-            title,
-            description,
-            status,
-            priority
-        }, { new: true });
-
-        res.status(200).json({
-            message: "Task Updated",
-            task: updatedTask
-        })
-
+        res.status(200).json({ message: "Task Updated", task: updatedTask });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        })
-        return
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-}
-
+};
 
 export const deleteTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const taskId = req.params.id;
         const userId = req.user.id;
 
-        if (!taskId || !mongoose.Types.ObjectId.isValid(taskId)) {
-            res.status(400).json({
-                message: "Invalid Task Id",
-            })
-            return
-        }
+        if (!taskId || !mongoose.Types.ObjectId.isValid(taskId))
+            return res.status(400).json({ message: "Invalid Task Id" });
 
         const task = await taskModel.findById(taskId);
-
-        if (!task) {
-            res.status(404).json({
-                message: "Task Not Found"
-            })
-            return
-        }
-
-        if (task.user?.toString() !== userId.toString()) {
-            res.status(401).json({
-                message: "Unauthorized"
-            })
-            return
-        }
+        if (!task) return res.status(404).json({ message: "Task Not Found" });
+        if (task.user?.toString() !== userId.toString()) return res.status(401).json({ message: "Unauthorized" });
 
         await taskModel.findByIdAndDelete(taskId);
 
-        res.status(200).json({
-            message: "Task Deleted"
-        })
+        // Log the delete event
+        await logEvent(req, userId, "delete_task", 3, `Task deleted with ID: ${task._id}`);
 
-
+        res.status(200).json({ message: "Task Deleted" });
     } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            message: "Internal Server Error"
-        })
-        return
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};

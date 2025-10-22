@@ -9,6 +9,7 @@ import { dbConnection } from "./config/dbConnection.config";
 import taskRouter from "./routes/task.route";
 import cors from "cors";
 import userRouter from "./routes/user.route";
+import logRouter from "./routes/log.route";
 
 app.use(cors({
     origin: "http://localhost:5173",
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRouter);
 app.use('/api/task', taskRouter);
 app.use('/api/user', userRouter);
+app.use('/api/logs', logRouter)
 
 async function main() {
     try {

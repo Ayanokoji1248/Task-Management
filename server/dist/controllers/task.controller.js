@@ -17,6 +17,7 @@ const zod_1 = __importDefault(require("zod"));
 const user_model_1 = require("../models/user.model");
 const task_model_1 = require("../models/task.model");
 const mongoose_1 = __importDefault(require("mongoose"));
+const helper_1 = require("../utils/helper");
 const taskValidation = zod_1.default.object({
     title: zod_1.default.string().trim(),
     description: zod_1.default.string().trim(),
@@ -27,41 +28,22 @@ const createTask = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     try {
         const userId = req.user.id;
         const { title, description, status, priority } = req.body;
-        const validate = taskValidation.safeParse({
-            title, description, status, priority
-        });
+        const validate = taskValidation.safeParse({ title, description, status, priority });
         if (!validate.success) {
             const flattenError = validate.error.flatten((issue) => issue.message);
-            res.status(400).json({
-                error: flattenError.fieldErrors,
-            });
-            return;
+            return res.status(400).json({ error: flattenError.fieldErrors });
         }
         const user = yield user_model_1.userModel.findById(userId);
-        if (!user) {
-            res.status(404).json({
-                message: "User Not Found"
-            });
-            return;
-        }
-        const task = yield task_model_1.taskModel.create({
-            title,
-            description,
-            status,
-            priority,
-            user: userId
-        });
-        res.status(201).json({
-            message: "Task Created",
-            task
-        });
+        if (!user)
+            return res.status(404).json({ message: "User Not Found" });
+        const task = yield task_model_1.taskModel.create({ title, description, status, priority, user: userId });
+        // Log the creation event
+        yield (0, helper_1.logEvent)(req, userId, "create_task", 1, `Task created with ID: ${task._id}`);
+        res.status(201).json({ message: "Task Created", task });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
-        return;
+        res.status(500).json({ message: "Internal Server Error" });
     }
 });
 exports.createTask = createTask;
@@ -69,18 +51,13 @@ const getAllUserTask = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     try {
         const userId = req.user.id;
         const tasks = yield task_model_1.taskModel.find({ user: userId });
-        res.status(200).json({
-            message: "User Tasks",
-            tasks
-        });
-        return;
+        // Optional: log that user viewed tasks
+        yield (0, helper_1.logEvent)(req, userId, "view_tasks", 1, `Fetched all tasks for user`);
+        res.status(200).json({ message: "User Tasks", tasks });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
-        return;
+        res.status(500).json({ message: "Internal Server Error" });
     }
 });
 exports.getAllUserTask = getAllUserTask;
@@ -90,42 +67,21 @@ const updateTask = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         const taskId = req.params.id;
         const userId = req.user.id;
         const { title, description, status, priority } = req.body;
-        if (!taskId || !mongoose_1.default.Types.ObjectId.isValid(taskId)) {
-            res.status(404).json({
-                message: "Invalid Task Id"
-            });
-            return;
-        }
+        if (!taskId || !mongoose_1.default.Types.ObjectId.isValid(taskId))
+            return res.status(404).json({ message: "Invalid Task Id" });
         const task = yield task_model_1.taskModel.findById(taskId);
-        if (!task) {
-            res.status(404).json({
-                message: "Task Not Found"
-            });
-            return;
-        }
-        if (((_a = task.user) === null || _a === void 0 ? void 0 : _a.toString()) !== userId.toString()) {
-            res.status(400).json({
-                message: "Forbidden"
-            });
-            return;
-        }
-        const updatedTask = yield task_model_1.taskModel.findByIdAndUpdate(taskId, {
-            title,
-            description,
-            status,
-            priority
-        }, { new: true });
-        res.status(200).json({
-            message: "Task Updated",
-            task: updatedTask
-        });
+        if (!task)
+            return res.status(404).json({ message: "Task Not Found" });
+        if (((_a = task.user) === null || _a === void 0 ? void 0 : _a.toString()) !== userId.toString())
+            return res.status(403).json({ message: "Forbidden" });
+        const updatedTask = yield task_model_1.taskModel.findByIdAndUpdate(taskId, { title, description, status, priority }, { new: true });
+        // Log the update event
+        yield (0, helper_1.logEvent)(req, userId, "update_task", 2, `Task updated with ID: ${task._id}`);
+        res.status(200).json({ message: "Task Updated", task: updatedTask });
     }
     catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
-        return;
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 });
 exports.updateTask = updateTask;
@@ -134,36 +90,21 @@ const deleteTask = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     try {
         const taskId = req.params.id;
         const userId = req.user.id;
-        if (!taskId || !mongoose_1.default.Types.ObjectId.isValid(taskId)) {
-            res.status(400).json({
-                message: "Invalid Task Id",
-            });
-            return;
-        }
+        if (!taskId || !mongoose_1.default.Types.ObjectId.isValid(taskId))
+            return res.status(400).json({ message: "Invalid Task Id" });
         const task = yield task_model_1.taskModel.findById(taskId);
-        if (!task) {
-            res.status(404).json({
-                message: "Task Not Found"
-            });
-            return;
-        }
-        if (((_a = task.user) === null || _a === void 0 ? void 0 : _a.toString()) !== userId.toString()) {
-            res.status(401).json({
-                message: "Unauthorized"
-            });
-            return;
-        }
+        if (!task)
+            return res.status(404).json({ message: "Task Not Found" });
+        if (((_a = task.user) === null || _a === void 0 ? void 0 : _a.toString()) !== userId.toString())
+            return res.status(401).json({ message: "Unauthorized" });
         yield task_model_1.taskModel.findByIdAndDelete(taskId);
-        res.status(200).json({
-            message: "Task Deleted"
-        });
+        // Log the delete event
+        yield (0, helper_1.logEvent)(req, userId, "delete_task", 3, `Task deleted with ID: ${task._id}`);
+        res.status(200).json({ message: "Task Deleted" });
     }
     catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
-        return;
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 });
 exports.deleteTask = deleteTask;

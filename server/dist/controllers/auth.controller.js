@@ -28,10 +28,11 @@ const zod_1 = require("zod");
 const user_model_1 = require("../models/user.model");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const helper_1 = require("../utils/helper");
 const userRegisterSchema = zod_1.z.object({
     username: zod_1.z.string().trim().min(5, "At least 5 character long"),
     email: zod_1.z.string().trim().email({ message: "Invalid Email format" }),
-    password: zod_1.z.string().trim().min(5, "Password should atleast 5 character long")
+    password: zod_1.z.string().trim().min(5, "Password should at least 5 characters long")
 });
 const userLoginSchema = userRegisterSchema.pick({
     email: true,
@@ -43,47 +44,33 @@ const userRegister = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         const validate = userRegisterSchema.safeParse({ username, email, password });
         if (!validate.success) {
             const flattenError = validate.error.flatten((issue) => issue.message);
-            res.status(400).json({
-                "errors": flattenError.fieldErrors,
-            });
+            res.status(400).json({ errors: flattenError.fieldErrors });
+            yield (0, helper_1.logEvent)(req, null, "registration_failed", 3, "Validation Error");
             return;
         }
         const userExist = yield user_model_1.userModel.findOne({ email });
         if (userExist) {
-            res.status(400).json({
-                message: "Email Already Exists"
-            });
+            res.status(400).json({ message: "Email Already Exists" });
+            yield (0, helper_1.logEvent)(req, null, "registration_failed", 3, "Email Already Exists");
             return;
         }
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
-        const user = yield user_model_1.userModel.create({
-            username,
-            email,
-            password: hashedPassword
-        });
+        const user = yield user_model_1.userModel.create({ username, email, password: hashedPassword });
         if (!user) {
-            res.status(400).json({
-                message: "Error Creating User"
-            });
+            res.status(400).json({ message: "Error Creating User" });
+            yield (0, helper_1.logEvent)(req, null, "registration_failed", 4, "Error creating user in DB");
             return;
         }
         const _a = user.toObject(), { password: _ } = _a, sanitizeUser = __rest(_a, ["password"]);
         const token = jsonwebtoken_1.default.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET);
-        res.cookie("token", token, {
-            httpOnly: true,
-            sameSite: "strict",
-        });
-        res.status(201).json({
-            message: "User Created",
-            user: sanitizeUser,
-        });
-        return;
+        res.cookie("token", token, { httpOnly: true, sameSite: "strict" });
+        res.status(201).json({ message: "User Created", user: sanitizeUser });
+        yield (0, helper_1.logEvent)(req, user._id.toString(), "registration_success", 1, "User registered successfully");
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
+        res.status(500).json({ message: "Internal Server Error" });
+        yield (0, helper_1.logEvent)(req, null, "registration_failed", 5, "Internal Server Error during registration");
     }
 });
 exports.userRegister = userRegister;
@@ -93,67 +80,51 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         const validate = userLoginSchema.safeParse({ email, password });
         if (!validate.success) {
             const flattenError = validate.error.flatten((issue) => issue.message);
-            res.status(400).json({
-                error: flattenError.fieldErrors,
-            });
+            res.status(400).json({ error: flattenError.fieldErrors });
             return;
         }
         const userExist = yield user_model_1.userModel.findOne({ email });
         if (!userExist) {
-            res.status(400).json({
-                message: "User Not Found"
-            });
+            res.status(400).json({ message: "User Not Found" });
+            yield (0, helper_1.logEvent)(req, null, "login_failed", 3, `Login attempt failed for email: ${email}`);
             return;
         }
-        const passwordIsValid = yield bcrypt_1.default.compare(password, userExist === null || userExist === void 0 ? void 0 : userExist.password);
+        const passwordIsValid = yield bcrypt_1.default.compare(password, userExist.password);
         if (!passwordIsValid) {
-            res.status(401).json({
-                message: "Invalid Credentials",
-            });
+            res.status(401).json({ message: "Invalid Credentials" });
+            yield (0, helper_1.logEvent)(req, userExist._id.toString(), "login_failed", 3, "Incorrect password");
             return;
         }
         const _a = userExist.toObject(), { password: _ } = _a, sanitizeUser = __rest(_a, ["password"]);
-        const token = jsonwebtoken_1.default.sign({ id: userExist._id, username: userExist.username }, process.env.JWT_SECRET);
-        res.cookie("token", token, {
-            httpOnly: true,
-            sameSite: "strict",
-        });
-        res.status(200).json({
-            message: "Login Successful",
-            user: sanitizeUser,
-        });
+        const token = jsonwebtoken_1.default.sign({ id: userExist._id, username: userExist.username, role: userExist.role }, process.env.JWT_SECRET);
+        res.cookie("token", token, { httpOnly: true, sameSite: "strict" });
+        res.status(200).json({ message: "Login Successful", user: sanitizeUser });
+        yield (0, helper_1.logEvent)(req, userExist._id.toString(), "login_success", 1, "User logged in successfully");
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({
-            message: "Internal Server Error",
-        });
+        res.status(500).json({ message: "Internal Server Error" });
+        yield (0, helper_1.logEvent)(req, null, "login_failed", 5, "Internal Server Error during login");
     }
 });
 exports.userLogin = userLogin;
 const userLogout = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
         const token = req.cookies.token;
-        console.log(req.cookies);
         if (!token) {
-            res.status(404).json({
-                message: "Token Required"
-            });
+            res.status(404).json({ message: "Token Required" });
             return;
         }
-        res.clearCookie("token", {
-            httpOnly: true,
-            sameSite: "strict"
-        });
-        res.status(200).json({
-            message: "User Logout"
-        });
+        res.clearCookie("token", { httpOnly: true, sameSite: "strict" });
+        res.status(200).json({ message: "User Logout" });
+        // Log the logout event (userId is optional here, could decode token if needed)
+        yield (0, helper_1.logEvent)(req, ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || null, "logout", 1, "User logged out successfully");
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
-            message: "Internal Server Error"
-        });
+        res.status(500).json({ message: "Internal Server Error" });
+        yield (0, helper_1.logEvent)(req, ((_b = req.user) === null || _b === void 0 ? void 0 : _b.id) || null, "logout_failed", 5, "Internal Server Error during logout");
     }
 });
 exports.userLogout = userLogout;
